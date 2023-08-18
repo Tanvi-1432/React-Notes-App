@@ -1,4 +1,4 @@
-# Notes App with React Readme
+# React Notes App
 
 The **Notes App** is a user-friendly and feature-rich web application designed to help you efficiently manage your notes. With the ability to add, delete, and search for notes, as well as local storage support, this app offers a seamless experience for organizing your thoughts and information.
 
@@ -16,7 +16,7 @@ The **Notes App** is a user-friendly and feature-rich web application designed t
 
 - **Add Notes**: Easily create new notes with a title and content.
 - **Delete Notes**: Remove unwanted notes with a single click.
-- **Search Functionality**: Efficiently search through your notes by title keywords.
+- **Search Functionality**: Efficiently search through your notes by title or content keywords.
 - **Local Storage Support**: Your notes are automatically stored in the browser's local storage, ensuring your data is persistent across sessions.
 - **Responsive Design**: The app is designed to work seamlessly across various screen sizes and devices.
 

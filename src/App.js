@@ -57,7 +57,7 @@ function App() {
                 <Header handleToggleDarkMode={setDarkMode} darkMode={darkMode}/>
                 <Search handleSearchNote={setSearchText} />
                 <NotesList
-                    notes={notes.filter((note) => note.title.toLowerCase().includes(searchText))}
+                    notes={notes.filter((note) => note.title.toLowerCase().includes(searchText) || note.text.toLowerCase().includes(searchText))}
                     handleAddNote={addNote}
                     handleDeleteNote={deleteNote}
                 />
