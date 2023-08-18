@@ -1,13 +1,176 @@
-body {
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Mulish:wght@400&family=Noto+Sans:wght@400&family=Work+Sans:wght@600&display=swap');
+
+* {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+body {
+  font-family: 'Work Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: rgb(220, 216, 211);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2rem 0;
+}
+
+.header h1 {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 4rem;
+  -webkit-text-stroke-color: black;
+  -webkit-text-stroke-width: 1px;
+  color: #d6742b;
+}
+
+@media only screen and (max-width: 768px) {
+  .header h1 {
+  font-size: 3rem;
+  }
+}
+
+.toggle {
+  border-radius: 15px;
+  border: none;
+  cursor: pointer;
+}
+
+.dark-mode {
+  background-color: #202124;
+  transition: .3s;
+}
+
+.dark-mode h1 {
+  -webkit-text-stroke-color: whitesmoke;
+  /* color: #7e9c71; */
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 15px;
+  min-height: 100vh;
+}
+
+.notes-list {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.note.new {
+  background-color: #f6ecc9;
+}
+
+.note.new input {
+  border: none;
+  background-color: #f6ecc9;
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.note.new input:focus {
+  outline: none;
+}
+
+textarea {
+  border: none;
+  resize: none;
+  background-color: #f6ecc9;
+  font-size: 1.2rem;
+}
+
+textarea:focus {
+  outline: none;
+}
+
+.save {
+  background-color: whitesmoke;
+  color: black;
+  border: 2px solid black;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-family: 'Archivo Black', sans-serif;
+}
+
+.save:active {
+  scale: .9;
+}
+
+.notes-list {
+  padding-bottom: 2rem;
+}
+
+.note {
+  border-radius: 5px;
+  border: 3px solid black;
+  padding: 1rem;
+  min-height: 170px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  white-space: pre-wrap;
+  box-shadow: 11px 24px 27px -1px rgba(150, 150, 150, 0.69);
+}
+
+.dark-mode .note {
+  border-color: whitesmoke;
+  box-shadow: 11px 24px 27px -1px rgba(68, 68, 68, 0.61)
+}
+
+.note-text h2 {
+  font-size: 2rem;
+  margin: 0 0 1rem 0;
+  font-family: 'Work Sans', sans-serif;
+}
+
+.note-text span {
+  font-size: 1.2rem;
+  font-family: 'Mulish', sans-serif;
+}
+
+.note-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.delete-icon:hover {
+  cursor: pointer;
+  opacity: .6;
+}
+
+
+.search {
+  display: flex;
+  align-items: center;
+  background-color: rgb(233, 233, 233);
+  border: 2px solid black;
+  border-radius: 3px;
+  padding: 5px;
+  margin-bottom: 1.5em;
+}
+
+.dark-mode .search {
+  border-color: white;
+}
+
+.search input {
+  border: none;
+  background-color: rgb(233, 233, 233);
+  width: 100%;
+  font-size: 1.2rem;
+  padding-left: .5rem;
+}
+
+.search input:focus {
+  outline: none;
 }
