@@ -22,7 +22,11 @@ The **Notes App** is a user-friendly and feature-rich web application designed t
 
 ## Demo
 
-Provide a link or instructions on how users can access a live demo of your app. You can also include screenshots or GIFs to showcase the app's features.
+**Live Server** - [React-Notes-App](https://tanvi-1432.github.io/React-Notes-App/)
+
+![](./public/screenshots/Screenshot%202023-08-20%20at%2009-54-49%20Notes%20App.jpg)
+
+![](./public/screenshots/demo.gif)
 
 ## Installation
 
@@ -38,7 +42,7 @@ Follow these steps to set up the project on your local machine:
 2. Open your web browser and navigate to `http://localhost:3000` to access the app.
 3. Use the app to add, delete, and search for notes. Your notes will be saved in the local storage.
 
-## Technologies Used
+## 🪛 Technologies Used
 
 - **React**: A JavaScript library for building user interfaces.
 - **LocalStorage**: HTML5 web storage technology used to store notes locally.
@@ -46,7 +50,7 @@ Follow these steps to set up the project on your local machine:
 - **Git**: Version control and collaboration.
 - **GitHub**: Hosting and sharing of the codebase.
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! If you'd like to contribute to the project, follow these steps:
 
