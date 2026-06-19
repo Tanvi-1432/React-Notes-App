@@ -78,6 +78,14 @@ body {
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
+.theme-wash {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  will-change: clip-path, opacity;
+}
+
 /* ─── Reduced Motion ─────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -257,6 +265,10 @@ body {
   background-color: rgba(0, 0, 0, 0.06);
 }
 
+.sidebar__item:active {
+  transform: scale(0.97);
+}
+
 .sidebar__item--active {
   background-color: var(--border-color);
   color: var(--bg-body);
@@ -414,6 +426,7 @@ body {
 
 .sidebar__icon-btn:hover { color: var(--text-primary); }
 .sidebar__icon-btn--danger:hover { color: #c0392b; }
+.sidebar__icon-btn:active { transform: scale(0.92); }
 
 .sidebar__add-btn {
   color: var(--text-primary);
@@ -762,6 +775,11 @@ body {
 }
 
 /* ─── Note Card ──────────────────────────────────────────────────────────────── */
+.note-card-shell {
+  min-width: 0;
+  perspective: 900px;
+}
+
 .note-card {
   border: var(--border-width) solid var(--border-color);
   border-radius: var(--border-radius-md);
@@ -780,6 +798,7 @@ body {
   position: relative;
   word-break: break-word;
   will-change: transform;
+  transform-style: preserve-3d;
   overflow: hidden;
 }
 
@@ -803,7 +822,6 @@ body {
 
 @media (hover: hover) {
   .note-card:hover {
-    transform: translateY(-4px) rotate(-0.4deg);
     box-shadow: var(--shadow-lg);
   }
 }
@@ -972,6 +990,7 @@ body {
 }
 
 .tag-chip__remove:hover { opacity: 1; }
+.tag-chip__remove:active { transform: scale(0.9); }
 
 /* Badges row */
 .note-card__badges {
@@ -1055,10 +1074,11 @@ body {
   border-radius: var(--border-radius-sm);
   display: flex;
   align-items: center;
-  transition: opacity 0.12s;
+  transition: opacity 0.12s, transform 0.12s;
 }
 
 .note-card__action-btn:hover { opacity: 1; }
+.note-card__action-btn:active { transform: scale(0.9); }
 
 .note-card__action-btn:focus-visible {
   outline: 2px solid var(--border-color);
@@ -1246,6 +1266,7 @@ body {
 }
 
 .note-modal__close-btn:hover { opacity: 1; }
+.note-modal__close-btn:active { transform: scale(0.9); }
 .note-modal__close-btn:focus-visible {
   outline: 2px solid var(--border-color);
   outline-offset: 2px;
@@ -1318,6 +1339,10 @@ body {
 
 .editor-toolbar__btn:hover {
   background: rgba(0,0,0,0.08);
+}
+
+.editor-toolbar__btn:active:not(:disabled) {
+  transform: scale(0.94);
 }
 
 .dark-mode .editor-toolbar__btn:hover {
@@ -1560,6 +1585,7 @@ body {
 }
 
 .note-modal__clear-date:hover { color: var(--text-primary); }
+.note-modal__clear-date:active { transform: scale(0.9); }
 
 .note-modal__folder-select {
   font-family: var(--font-ui);
@@ -1717,6 +1743,7 @@ body {
 }
 
 .confirm-dialog__btn:hover { opacity: 0.82; }
+.confirm-dialog__btn:active:not(:disabled) { transform: scale(0.96); }
 .confirm-dialog__btn:disabled { opacity: 0.4; cursor: default; }
 
 .confirm-dialog__btn--danger {

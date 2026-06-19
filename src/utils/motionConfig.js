@@ -8,6 +8,62 @@ export const duration = {
   slow: 0.32,
 };
 
+export const boardVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      delayChildren: 0.03,
+      staggerChildren: 0.035,
+    },
+  },
+};
+
+function directionalCardExit(intent = 'default') {
+  const base = {
+    opacity: 0,
+    transition: { duration: duration.fast, ease: [0.4, 0, 1, 1] },
+  };
+
+  if (intent === 'archive') {
+    return {
+      ...base,
+      x: -40,
+      y: 10,
+      scale: 0.94,
+      rotate: -2.5,
+      filter: 'blur(1px)',
+    };
+  }
+
+  if (intent === 'restore') {
+    return {
+      ...base,
+      x: 36,
+      y: -8,
+      scale: 0.96,
+      rotate: 1.5,
+    };
+  }
+
+  if (intent === 'delete') {
+    return {
+      ...base,
+      y: 24,
+      scale: 0.88,
+      rotate: 3,
+      filter: 'blur(2px)',
+      transition: { duration: 0.2, ease: [0.4, 0, 1, 1] },
+    };
+  }
+
+  return {
+    ...base,
+    scale: 0.93,
+    y: 10,
+    rotate: 1.5,
+  };
+}
+
 // Card entrance: placed onto the board
 export const cardVariants = {
   hidden: {
@@ -23,13 +79,7 @@ export const cardVariants = {
     rotate: 0,
     transition: { duration: duration.normal, ease },
   },
-  exit: {
-    opacity: 0,
-    scale: 0.93,
-    y: 10,
-    rotate: 1.5,
-    transition: { duration: duration.fast, ease: [0.4, 0, 1, 1] },
-  },
+  exit: directionalCardExit,
 };
 
 // Modal panel
@@ -113,10 +163,15 @@ export function useSafeMotion() {
         hidden: { opacity: 0 },
         visible: { opacity: 1, ...instant },
       },
+      boardVariants: {
+        hidden: {},
+        visible: {},
+      },
       layoutTransition: false,
     };
   }
   return {
+    boardVariants,
     cardVariants,
     modalVariants,
     backdropVariants,

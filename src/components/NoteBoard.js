@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useAppContext } from '../context/AppContext';
 import { useSearch } from '../hooks/useSearch';
 import { applyFilter, sortNotes } from '../hooks/useSmartFolders';
@@ -10,6 +10,7 @@ import { useSafeMotion } from '../utils/motionConfig';
 
 function EmptyState({ filter, searchText }) {
   const { emptyStateVariants } = useSafeMotion();
+  const reduceMotion = useReducedMotion();
   const messages = {
     all: { headline: 'Your board is empty', sub: 'Add your first note above.' },
     pinned: { headline: 'Nothing pinned yet', sub: 'Pin important notes to keep them up here.' },
@@ -35,12 +36,19 @@ function EmptyState({ filter, searchText }) {
       animate="visible"
     >
       {!searchText && (
-        <svg className="empty-state__icon" viewBox="0 0 80 80" fill="none" aria-hidden="true">
+        <motion.svg
+          className="empty-state__icon"
+          viewBox="0 0 80 80"
+          fill="none"
+          aria-hidden="true"
+          animate={reduceMotion ? undefined : { y: [0, -4, 0], rotate: [0, -0.6, 0] }}
+          transition={reduceMotion ? undefined : { duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
+        >
           <rect x="12" y="8" width="56" height="64" rx="4" stroke="currentColor" strokeWidth="3" fill="none" />
           <line x1="22" y1="26" x2="58" y2="26" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
           <line x1="22" y1="38" x2="50" y2="38" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
           <line x1="22" y1="50" x2="44" y2="50" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-        </svg>
+        </motion.svg>
       )}
       <h3 className="empty-state__headline">{headline}</h3>
       {sub && <p className="empty-state__sub">{sub}</p>}
@@ -48,10 +56,17 @@ function EmptyState({ filter, searchText }) {
   );
 }
 
-export default function NoteBoard({ onOpenNote, onNewNote, onDeleteRequest, onClipRequest }) {
+export default function NoteBoard({
+  exitIntents = {},
+  onOpenNote,
+  onNewNote,
+  onArchiveRequest,
+  onDeleteRequest,
+  onClipRequest,
+}) {
   const { state } = useAppContext();
   const { notes, searchText, activeFilter, settings } = state;
-  const { layoutTransition } = useSafeMotion();
+  const { boardVariants, layoutTransition } = useSafeMotion();
 
   const searched = useSearch(notes, searchText);
   const filtered = useMemo(() => applyFilter(searched, activeFilter), [searched, activeFilter]);
@@ -73,6 +88,9 @@ export default function NoteBoard({ onOpenNote, onNewNote, onDeleteRequest, onCl
       <motion.div
         className="notes-grid"
         layout
+        variants={boardVariants}
+        initial="hidden"
+        animate="visible"
         transition={layoutTransition || undefined}
       >
         {showAddCard && <AddNoteCard onOpenNew={onNewNote} />}
@@ -94,7 +112,9 @@ export default function NoteBoard({ onOpenNote, onNewNote, onDeleteRequest, onCl
               <NoteCard
                 key={note.id}
                 note={note}
+                exitIntent={exitIntents[note.id] || 'default'}
                 onOpen={onOpenNote}
+                onArchiveRequest={onArchiveRequest}
                 onDeleteRequest={onDeleteRequest}
               />
             ))

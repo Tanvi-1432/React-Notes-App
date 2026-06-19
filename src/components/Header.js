@@ -1,4 +1,6 @@
-import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { motion, useReducedMotion } from 'framer-motion';
 import { MdSearch, MdMenu } from 'react-icons/md';
 import { useAppContext } from '../context/AppContext';
 
@@ -23,10 +25,60 @@ const MoonIcon = () => (
   </svg>
 );
 
+function ThemeWash({ burst, onDone }) {
+  useEffect(() => {
+    if (!burst) return undefined;
+    const timeout = window.setTimeout(onDone, 620);
+    return () => window.clearTimeout(timeout);
+  }, [burst, onDone]);
+
+  if (!burst || typeof document === 'undefined') return null;
+
+  return createPortal(
+    <motion.div
+      className="theme-wash"
+      aria-hidden="true"
+      style={{
+        backgroundColor: burst.color,
+        '--theme-wash-x': `${burst.x}px`,
+        '--theme-wash-y': `${burst.y}px`,
+      }}
+      initial={{
+        clipPath: `circle(0px at ${burst.x}px ${burst.y}px)`,
+        opacity: 0.72,
+      }}
+      animate={{
+        clipPath: `circle(150vmax at ${burst.x}px ${burst.y}px)`,
+        opacity: 0,
+      }}
+      transition={{ duration: 0.58, ease: [0.22, 1, 0.36, 1] }}
+    />,
+    document.body
+  );
+}
+
 export default function Header({ onMenuClick }) {
   const { state, setSearch, setSetting } = useAppContext();
   const { darkMode } = state.settings;
   const { searchText } = state;
+  const reduceMotion = useReducedMotion();
+  const [themeBurst, setThemeBurst] = useState(null);
+
+  function handleThemeToggle(e) {
+    const nextDarkMode = !darkMode;
+    const rect = e.currentTarget.getBoundingClientRect();
+
+    if (!reduceMotion) {
+      setThemeBurst({
+        id: Date.now(),
+        x: Math.round(rect.left + rect.width / 2),
+        y: Math.round(rect.top + rect.height / 2),
+        color: nextDarkMode ? '#1a1a1e' : '#dcd8d3',
+      });
+    }
+
+    setSetting({ darkMode: nextDarkMode });
+  }
 
   return (
     <header className="header">
@@ -57,7 +109,7 @@ export default function Header({ onMenuClick }) {
       <motion.button
         type="button"
         className="dark-mode-toggle"
-        onClick={() => setSetting({ darkMode: !darkMode })}
+        onClick={handleThemeToggle}
         aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
         aria-pressed={darkMode}
         whileTap={{ scale: 0.88, rotate: darkMode ? -30 : 30 }}
@@ -65,6 +117,8 @@ export default function Header({ onMenuClick }) {
       >
         {darkMode ? <SunIcon /> : <MoonIcon />}
       </motion.button>
+
+      <ThemeWash burst={themeBurst} onDone={() => setThemeBurst(null)} />
     </header>
   );
 }

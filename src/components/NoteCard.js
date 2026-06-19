@@ -1,5 +1,12 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { forwardRef, useState } from 'react';
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+  useTransform,
+} from 'framer-motion';
 import {
   MdDeleteForever, MdPushPin, MdOutlinePushPin,
   MdArchive, MdUnarchive, MdCalendarToday, MdNotifications,
@@ -45,11 +52,21 @@ function ReminderBadge({ reminderDate }) {
   );
 }
 
-export default function NoteCard({ note, onOpen, onDeleteRequest }) {
-  const { pinNote, archiveNote, state } = useAppContext();
+const NoteCard = forwardRef(function NoteCard(
+  { note, exitIntent = 'default', onOpen, onArchiveRequest, onDeleteRequest },
+  ref
+) {
+  const { pinNote, state } = useAppContext();
   const { searchText } = state;
   const { cardVariants, layoutTransition } = useSafeMotion();
+  const reduceMotion = useReducedMotion();
   const [pinAnimKey, setPinAnimKey] = useState(0);
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
+  const tiltX = useTransform(pointerY, [-0.5, 0.5], [1.1, -1.1]);
+  const tiltY = useTransform(pointerX, [-0.5, 0.5], [-1.1, 1.1]);
+  const rotateX = useSpring(tiltX, { stiffness: 180, damping: 18, mass: 0.35 });
+  const rotateY = useSpring(tiltY, { stiffness: 180, damping: 18, mass: 0.35 });
 
   const isEdited = note.updatedDate && note.date && note.updatedDate !== note.date;
   const previewText = (note.contentPlainText || '')
@@ -76,23 +93,49 @@ export default function NoteCard({ note, onOpen, onDeleteRequest }) {
     pinNote(note.id);
   }
 
+  function handlePointerMove(e) {
+    if (reduceMotion || e.pointerType !== 'mouse') return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    pointerX.set((e.clientX - rect.left) / rect.width - 0.5);
+    pointerY.set((e.clientY - rect.top) / rect.height - 0.5);
+  }
+
+  function handlePointerLeave() {
+    pointerX.set(0);
+    pointerY.set(0);
+  }
+
   return (
     <motion.div
+      ref={ref}
+      className="note-card-shell"
       layout
       layoutId={note.id}
       transition={layoutTransition || undefined}
       variants={cardVariants}
+      custom={exitIntent}
       initial="hidden"
       animate="visible"
       exit="exit"
-      className={`note-card${note.isPinned ? ' note-card--pinned' : ''}${note.isArchived ? ' note-card--archived' : ''}`}
-      style={{ backgroundColor: note.randomBackgroundColor }}
-      onClick={handleCardClick}
-      onKeyDown={handleKeyDown}
-      tabIndex={0}
-      role="article"
-      aria-label={`Note: ${note.title || 'Untitled'}`}
     >
+      <motion.article
+        className={`note-card${note.isPinned ? ' note-card--pinned' : ''}${note.isArchived ? ' note-card--archived' : ''}`}
+        style={{
+          backgroundColor: note.randomBackgroundColor,
+          rotateX: reduceMotion ? 0 : rotateX,
+          rotateY: reduceMotion ? 0 : rotateY,
+          transformPerspective: 900,
+        }}
+        whileHover={reduceMotion ? undefined : { y: -4, rotateZ: -0.4 }}
+        transition={{ type: 'spring', stiffness: 360, damping: 28, mass: 0.45 }}
+        onClick={handleCardClick}
+        onKeyDown={handleKeyDown}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={handlePointerLeave}
+        tabIndex={0}
+        role="article"
+        aria-label={`Note: ${note.title || 'Untitled'}`}
+      >
       {/* Pin indicator */}
       <AnimatePresence>
         {note.isPinned && (
@@ -171,7 +214,7 @@ export default function NoteCard({ note, onOpen, onDeleteRequest }) {
 
           <motion.button
             className="note-card__action-btn"
-            onClick={(e) => { e.stopPropagation(); archiveNote(note.id); }}
+            onClick={(e) => { e.stopPropagation(); onArchiveRequest(note); }}
             aria-label={note.isArchived ? 'Unarchive note' : 'Archive note'}
             title={note.isArchived ? 'Unarchive' : 'Archive'}
             whileTap={{ scale: 0.88 }}
@@ -192,6 +235,9 @@ export default function NoteCard({ note, onOpen, onDeleteRequest }) {
           </motion.button>
         </div>
       </div>
+      </motion.article>
     </motion.div>
   );
-}
+});
+
+export default NoteCard;

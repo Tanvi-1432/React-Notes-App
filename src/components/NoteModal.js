@@ -227,7 +227,10 @@ export default function NoteModal({ note, isNew, onClose }) {
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        link: false,
+        underline: false,
+      }),
       Underline,
       TaskList,
       TaskItem.configure({ nested: true }),
@@ -328,6 +331,7 @@ export default function NoteModal({ note, isNew, onClose }) {
       <motion.div
         className="note-modal"
         ref={modalRef}
+        layoutId={!isNew && note ? note.id : undefined}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"

@@ -1,28 +1,47 @@
-import { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { lazy, Suspense, useState } from 'react';
+import { AnimatePresence, LayoutGroup } from 'framer-motion';
 import { AppProvider, useAppContext } from './context/AppContext';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import NoteBoard from './components/NoteBoard';
-import NoteModal from './components/NoteModal';
 import ConfirmDialog from './components/ConfirmDialog';
-import ClipModal from './components/ClipModal';
+
+const loadNoteModal = () => import('./components/NoteModal');
+const loadClipModal = () => import('./components/ClipModal');
+
+const NoteModal = lazy(loadNoteModal);
+const ClipModal = lazy(loadClipModal);
 
 function AppInner() {
-  const { deleteNote } = useAppContext();
+  const { archiveNote, deleteNote } = useAppContext();
 
   const [modalNote, setModalNote] = useState(null);
   const [isNewNote, setIsNewNote] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [showClip, setShowClip] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [noteExitIntents, setNoteExitIntents] = useState({});
+
+  function setNoteExitIntent(id, intent) {
+    setNoteExitIntents((current) => ({ ...current, [id]: intent }));
+  }
+
+  function clearNoteExitIntent(id) {
+    setNoteExitIntents((current) => {
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
+  }
 
   function openEditNote(note) {
+    loadNoteModal();
     setModalNote(note);
     setIsNewNote(false);
   }
 
   function openNewNote() {
+    loadNoteModal();
     setModalNote(null);
     setIsNewNote(true);
   }
@@ -34,12 +53,38 @@ function AppInner() {
 
   function handleDeleteConfirmed() {
     if (confirmDeleteId) {
-      deleteNote(confirmDeleteId);
+      const id = confirmDeleteId;
+      setNoteExitIntent(id, 'delete');
+      window.setTimeout(() => deleteNote(id), 45);
+      window.setTimeout(() => clearNoteExitIntent(id), 450);
       setConfirmDeleteId(null);
     }
   }
 
+  function handleArchiveRequest(note) {
+    const intent = note.isArchived ? 'restore' : 'archive';
+    setNoteExitIntent(note.id, intent);
+    window.setTimeout(() => archiveNote(note.id), 45);
+    window.setTimeout(() => clearNoteExitIntent(note.id), 450);
+  }
+
+  function handleDeleteRequest(id) {
+    setNoteExitIntent(id, 'delete');
+    setConfirmDeleteId(id);
+  }
+
+  function handleDeleteCancel() {
+    if (confirmDeleteId) clearNoteExitIntent(confirmDeleteId);
+    setConfirmDeleteId(null);
+  }
+
+  function openClipModal() {
+    loadClipModal();
+    setShowClip(true);
+  }
+
   return (
+    <LayoutGroup id="notes-layout">
     <div className="app-shell">
       <Sidebar
         mobileOpen={mobileNavOpen}
@@ -51,22 +96,25 @@ function AppInner() {
 
         <main className="board-area__main">
           <NoteBoard
+            exitIntents={noteExitIntents}
             onOpenNote={openEditNote}
             onNewNote={openNewNote}
-            onDeleteRequest={(id) => setConfirmDeleteId(id)}
-            onClipRequest={() => setShowClip(true)}
+            onArchiveRequest={handleArchiveRequest}
+            onDeleteRequest={handleDeleteRequest}
+            onClipRequest={openClipModal}
           />
         </main>
       </div>
 
       <AnimatePresence>
         {(modalNote !== null || isNewNote) && (
-          <NoteModal
-            key="note-modal"
-            note={modalNote}
-            isNew={isNewNote}
-            onClose={closeModal}
-          />
+          <Suspense key="note-modal" fallback={null}>
+            <NoteModal
+              note={modalNote}
+              isNew={isNewNote}
+              onClose={closeModal}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
 
@@ -80,17 +128,20 @@ function AppInner() {
             cancelLabel="Keep it"
             isDanger
             onConfirm={handleDeleteConfirmed}
-            onCancel={() => setConfirmDeleteId(null)}
+            onCancel={handleDeleteCancel}
           />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {showClip && (
-          <ClipModal key="clip-modal" onClose={() => setShowClip(false)} />
+          <Suspense key="clip-modal" fallback={null}>
+            <ClipModal onClose={() => setShowClip(false)} />
+          </Suspense>
         )}
       </AnimatePresence>
     </div>
+    </LayoutGroup>
   );
 }
 
