@@ -1,69 +1,105 @@
-import { useState, useEffect } from "react";
-import { nanoid } from "nanoid";
-import NotesList from "./components/NotesList";
-import Search from "./components/Search";
-import Header from "./components/Header";
+import { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { AppProvider, useAppContext } from './context/AppContext';
+import Header from './components/Header';
+import Sidebar from './components/Sidebar';
+import NoteBoard from './components/NoteBoard';
+import NoteModal from './components/NoteModal';
+import ConfirmDialog from './components/ConfirmDialog';
+import ClipModal from './components/ClipModal';
+
+function AppInner() {
+  const { deleteNote } = useAppContext();
+
+  const [modalNote, setModalNote] = useState(null);
+  const [isNewNote, setIsNewNote] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [showClip, setShowClip] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  function openEditNote(note) {
+    setModalNote(note);
+    setIsNewNote(false);
+  }
+
+  function openNewNote() {
+    setModalNote(null);
+    setIsNewNote(true);
+  }
+
+  function closeModal() {
+    setModalNote(null);
+    setIsNewNote(false);
+  }
+
+  function handleDeleteConfirmed() {
+    if (confirmDeleteId) {
+      deleteNote(confirmDeleteId);
+      setConfirmDeleteId(null);
+    }
+  }
+
+  return (
+    <div className="app-shell">
+      <Sidebar
+        mobileOpen={mobileNavOpen}
+        onMobileClose={() => setMobileNavOpen(false)}
+      />
+
+      <div className="board-area">
+        <Header onMenuClick={() => setMobileNavOpen(true)} />
+
+        <main className="board-area__main">
+          <NoteBoard
+            onOpenNote={openEditNote}
+            onNewNote={openNewNote}
+            onDeleteRequest={(id) => setConfirmDeleteId(id)}
+            onClipRequest={() => setShowClip(true)}
+          />
+        </main>
+      </div>
+
+      <AnimatePresence>
+        {(modalNote !== null || isNewNote) && (
+          <NoteModal
+            key="note-modal"
+            note={modalNote}
+            isNew={isNewNote}
+            onClose={closeModal}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {confirmDeleteId && (
+          <ConfirmDialog
+            key="confirm-delete"
+            title="Delete note?"
+            message="This note will be permanently deleted."
+            confirmLabel="Delete"
+            cancelLabel="Keep it"
+            isDanger
+            onConfirm={handleDeleteConfirmed}
+            onCancel={() => setConfirmDeleteId(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showClip && (
+          <ClipModal key="clip-modal" onClose={() => setShowClip(false)} />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 function App() {
-    const [notes, setNotes] = useState([]);
-
-    const [searchText, setSearchText] = useState('');
-
-    const [darkMode, setDarkMode] = useState(false);
-
-    useEffect(() => {
-        const savedNotes = JSON.parse(localStorage.getItem('notes-app-data'));
-        if (savedNotes) {
-            setNotes(savedNotes);
-        }
-    }, []);
-
-    useEffect(() => {
-        localStorage.setItem('notes-app-data', JSON.stringify(notes));
-    }, [notes]);
-
-    useEffect(() => {
-        const savedDarkMode = JSON.parse(localStorage.getItem('toggle-dark-mode-data'));
-        if (savedDarkMode) {
-            setDarkMode(savedDarkMode);
-        }
-    },[]);
-
-    useEffect(() => {
-        localStorage.setItem('toggle-dark-mode-data', JSON.stringify(darkMode));
-    }, [darkMode]);
-
-    const addNote = (text, title, randomColor) => {
-        const date = new Date();
-        const newNote = {
-            id: nanoid(),
-            title: title,
-            text: text,
-            date: date.toLocaleDateString(),
-            randomBackgroundColor: randomColor
-        }
-        const newNotes = [newNote, ...notes];
-        setNotes(newNotes)
-    }
-
-    const deleteNote = (id) => {
-        const newNotes = notes.filter(note => note.id !== id);
-        setNotes(newNotes);
-    }
-
-    return (
-        <div className={darkMode ? 'dark-mode' : null}>
-            <div className="container">
-                <Header handleToggleDarkMode={setDarkMode} darkMode={darkMode}/>
-                <Search handleSearchNote={setSearchText} />
-                <NotesList
-                    notes={notes.filter((note) => note.title.toLowerCase().includes(searchText) || note.text.toLowerCase().includes(searchText))}
-                    handleAddNote={addNote}
-                    handleDeleteNote={deleteNote}
-                />
-            </div>
-        </div>
-    )
+  return (
+    <AppProvider>
+      <AppInner />
+    </AppProvider>
+  );
 }
 
 export default App;
