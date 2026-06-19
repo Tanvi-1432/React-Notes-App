@@ -10,7 +10,7 @@ A local-first sticky-note board with rich text editing, folders, tasks, web clip
 
 ## Preview
 
-**Live demo:** [tanvi-1432.github.io/React-Notes-App](https://tanvi-1432.github.io/React-Notes-App/)
+**Live demo:** [React-Notes-App](https://react-notes-app-five-dusky.vercel.app)
 
 ![Notes App screenshot](./public/screenshots/Screenshot%202023-08-20%20at%2009-54-49%20Notes%20App.jpg)
 
