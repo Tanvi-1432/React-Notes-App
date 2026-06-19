@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import { nanoid } from 'nanoid';
-import { migrateNotes, migrateSettings } from '../utils/migrateNote';
 import { extractTasksFromTiptap, extractPlainText, parseTiptapContent } from '../utils/tiptapHelpers';
 import { nowISO } from '../utils/dateUtils';
+import { loadAppData, saveFolders, saveNotes, saveSettings } from '../utils/indexedDbStorage';
 
 // ─── Initial State ────────────────────────────────────────────────────────────
 
@@ -127,66 +127,59 @@ export function notesReducer(state, action) {
   }
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function loadFolders() {
-  try {
-    const raw = JSON.parse(localStorage.getItem('notes-app-folders'));
-    if (Array.isArray(raw)) return raw;
-  } catch {
-    // ignore
-  }
-  return [];
-}
-
 // ─── Context ──────────────────────────────────────────────────────────────────
 
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(notesReducer, initialState);
+  const [storageReady, setStorageReady] = useState(false);
 
-  // ── Load from localStorage on mount ──────────────────────────────────────
+  // ── Load from IndexedDB on mount, importing legacy localStorage data if needed
   useEffect(() => {
-    let raw = [];
-    try {
-      raw = JSON.parse(localStorage.getItem('notes-app-data')) || [];
-    } catch {
-      raw = [];
+    let cancelled = false;
+
+    async function hydrate() {
+      try {
+        const appData = await loadAppData();
+        if (cancelled) return;
+        dispatch({ type: 'LOAD_NOTES', payload: appData.notes });
+        dispatch({ type: 'LOAD_SETTINGS', payload: appData.settings });
+        dispatch({ type: 'LOAD_FOLDERS', payload: appData.folders });
+      } catch (error) {
+        console.warn('Unable to load stored app data.', error);
+      } finally {
+        if (!cancelled) setStorageReady(true);
+      }
     }
-    const migrated = migrateNotes(raw);
-    dispatch({ type: 'LOAD_NOTES', payload: migrated });
 
-    const settings = migrateSettings();
-    dispatch({ type: 'LOAD_SETTINGS', payload: settings });
-
-    const folders = loadFolders();
-    dispatch({ type: 'LOAD_FOLDERS', payload: folders });
+    hydrate();
+    return () => { cancelled = true; };
   }, []);
 
   // ── Persist notes ─────────────────────────────────────────────────────────
   useEffect(() => {
-    if (state.notes.length === 0 && !localStorage.getItem('notes-app-data')) return;
-    try {
-      localStorage.setItem('notes-app-data', JSON.stringify(state.notes));
-    } catch (e) {
-      if (e.name === 'QuotaExceededError') console.warn('localStorage quota exceeded');
-    }
-  }, [state.notes]);
+    if (!storageReady) return;
+    saveNotes(state.notes).catch((error) => {
+      console.warn('Unable to save notes.', error);
+    });
+  }, [state.notes, storageReady]);
 
   // ── Persist settings ──────────────────────────────────────────────────────
   useEffect(() => {
-    try {
-      localStorage.setItem('notes-app-settings', JSON.stringify(state.settings));
-    } catch { /* ignore */ }
-  }, [state.settings]);
+    if (!storageReady) return;
+    saveSettings(state.settings).catch((error) => {
+      console.warn('Unable to save settings.', error);
+    });
+  }, [state.settings, storageReady]);
 
   // ── Persist folders ───────────────────────────────────────────────────────
   useEffect(() => {
-    try {
-      localStorage.setItem('notes-app-folders', JSON.stringify(state.folders));
-    } catch { /* ignore */ }
-  }, [state.folders]);
+    if (!storageReady) return;
+    saveFolders(state.folders).catch((error) => {
+      console.warn('Unable to save folders.', error);
+    });
+  }, [state.folders, storageReady]);
 
   // ── Sync dark mode class to body ─────────────────────────────────────────
   useEffect(() => {

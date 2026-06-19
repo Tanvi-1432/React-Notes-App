@@ -4,7 +4,7 @@ A local-first sticky-note board with rich text editing, folders, tasks, web clip
 
 ![React](https://img.shields.io/badge/React-18.2.0-61DAFB?logo=react&logoColor=111)
 ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=fff)
-![Tests](https://img.shields.io/badge/tests-64%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-72%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Deploy](https://img.shields.io/badge/deploy-GitHub%20Pages-222?logo=github)
 
@@ -24,7 +24,7 @@ React Notes App is a local-first notes board that keeps the tactile personality 
 
 The app keeps its scrapbook-style design DNA: colorful cards, thick borders, bold typography, dark mode, and subtle Framer Motion transitions that make notes feel like they are being placed, pinned, opened, and removed from a board.
 
-All note data is stored in the browser with `localStorage`, including migrated notes from the original app format. That keeps the project simple to run and deploy as a static GitHub Pages app.
+All note data is stored locally in the browser with IndexedDB, with a legacy `localStorage` migration path for older saved boards. That keeps the project simple to run and deploy as a static GitHub Pages app while giving the app a better storage foundation for future attachments and backups.
 
 ## Features
 
@@ -72,8 +72,9 @@ All note data is stored in the browser with `localStorage`, including migrated n
 
 ### Persistence
 
-- Store notes, settings, and folders locally in the browser.
+- Store notes, settings, and folders locally in the browser with IndexedDB.
 - Migrate old notes from the original `{ id, title, text, date, randomBackgroundColor }` shape.
+- Import existing legacy `localStorage` data into IndexedDB on first run after upgrade.
 - Run as a static app with no backend required.
 
 ## Tech Stack
@@ -86,11 +87,11 @@ All note data is stored in the browser with `localStorage`, including migrated n
 - **react-icons** for interface icons.
 - **nanoid** for note and folder IDs.
 - **Vitest + React Testing Library** for unit coverage.
-- **localStorage** for local-first persistence.
+- **IndexedDB** for local-first persistence, with legacy `localStorage` fallback/migration.
 
 ## Architecture
 
-The app is organized around an `AppProvider` with reducer-based state for notes, folders, settings, search, sorting, and active filters. Persistence is handled through `localStorage`, with migration utilities that upgrade older note data into the current rich-note shape.
+The app is organized around an `AppProvider` with reducer-based state for notes, folders, settings, search, sorting, and active filters. Persistence is handled through IndexedDB, with migration utilities that upgrade older note data into the current rich-note shape and import existing `localStorage` boards.
 
 Search and folder behavior live in focused hooks, including `useSearch`, `useSmartFolders`, and folder-count helpers. The main UI is split into reusable components such as `Sidebar`, `Header`, `NoteBoard`, `NoteCard`, `NoteModal`, `ClipModal`, and confirmation dialogs.
 
@@ -137,13 +138,14 @@ Builds and deploys the app to GitHub Pages using the configured `homepage` in `p
 
 Current verified test result:
 
-- 6 test suites passed
-- 64 tests passed
+- 8 test suites passed
+- 72 tests passed
 - 0 snapshots
 
 Coverage currently includes:
 
 - note migration from the old app shape
+- IndexedDB/localStorage fallback migration
 - reducer behavior
 - Tiptap helper utilities
 - task extraction
@@ -159,11 +161,12 @@ npm test
 
 ## Data & Privacy
 
-React Notes App is local-first. Notes, folders, and settings are stored in the browser with `localStorage`.
+React Notes App is local-first. Notes, folders, and settings are stored in the browser with IndexedDB.
 
 - No account is required.
 - No backend or cloud database is used.
 - No cross-device sync exists yet.
+- Existing legacy `localStorage` data is migrated into IndexedDB when the app first loads after upgrade.
 - Clearing browser storage can delete saved notes.
 - Web clip metadata lookup uses a CORS proxy and falls back safely if metadata cannot be fetched.
 
@@ -178,7 +181,6 @@ React Notes App is local-first. Notes, folders, and settings are stored in the b
 
 ## Roadmap
 
-- Move note and folder storage from `localStorage` to IndexedDB.
 - Add attachments for images, PDFs, and richer link previews.
 - Add OCR for image/PDF search.
 - Add JSON export/import for backups and migration.

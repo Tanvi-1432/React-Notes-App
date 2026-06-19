@@ -1,5 +1,12 @@
 import { tiptapDocFromPlainText, extractTasksFromTiptap } from './tiptapHelpers';
 
+export const DEFAULT_SETTINGS = {
+  darkMode: false,
+  sidebarCollapsed: false,
+  defaultFolderId: null,
+  sortOrder: 'updatedDesc',
+};
+
 /**
  * Migrate a single note from the old shape to the v1 shape.
  * Idempotent: if `content` already exists, returns the note unchanged
@@ -52,7 +59,7 @@ export function migrateNote(raw) {
 }
 
 /**
- * Migrate all notes from localStorage.
+ * Migrate all notes from a legacy or partially upgraded storage payload.
  * Returns the migrated array. Does not write to storage itself.
  */
 export function migrateNotes(rawNotes) {
@@ -60,41 +67,42 @@ export function migrateNotes(rawNotes) {
   return rawNotes.map(migrateNote);
 }
 
-/**
- * Migrate app settings from the old separate dark-mode key to the unified settings object.
- */
-export function migrateSettings() {
-  const existingSettings = (() => {
+function readLegacySettings() {
+  return (() => {
     try {
       return JSON.parse(localStorage.getItem('notes-app-settings'));
     } catch {
       return null;
     }
   })();
+}
 
-  if (existingSettings && typeof existingSettings === 'object') {
-    return {
-      darkMode: false,
-      sidebarCollapsed: false,
-      defaultFolderId: null,
-      sortOrder: 'updatedDesc',
-      ...existingSettings,
-    };
-  }
-
-  // Try to read old dark mode key
-  const oldDarkMode = (() => {
+function readLegacyDarkMode() {
+  return (() => {
     try {
       return JSON.parse(localStorage.getItem('toggle-dark-mode-data')) === true;
     } catch {
       return false;
     }
   })();
+}
+
+/**
+ * Migrate app settings from the old separate dark-mode key to the unified settings object.
+ * When called without arguments, reads the legacy localStorage keys for backwards compatibility.
+ */
+export function migrateSettings(existingSettings, oldDarkMode) {
+  const settingsToMigrate = existingSettings === undefined ? readLegacySettings() : existingSettings;
+
+  if (settingsToMigrate && typeof settingsToMigrate === 'object') {
+    return {
+      ...DEFAULT_SETTINGS,
+      ...settingsToMigrate,
+    };
+  }
 
   return {
-    darkMode: oldDarkMode,
-    sidebarCollapsed: false,
-    defaultFolderId: null,
-    sortOrder: 'updatedDesc',
+    ...DEFAULT_SETTINGS,
+    darkMode: oldDarkMode === undefined ? readLegacyDarkMode() : oldDarkMode,
   };
 }
